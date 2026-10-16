@@ -1,0 +1,7 @@
+{
+  "name": "eduportal",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
