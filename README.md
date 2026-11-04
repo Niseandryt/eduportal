@@ -7,6 +7,21 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Project Setup
+
+To clone this branch onto an empty folder use this in the VSCode terminal
+`git clone -b api https://github.com/Niseandryt/eduportal.git`
+In order to set up your project after cloning the git repository, run these commands in the terminal
+```bash
+    npm install
+    composer install
+    cp .env.example .env
+    php artisan key:generate
+    php artisan migrate:fresh --seed
+    php artisan serve
+```
+F. Axel
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
