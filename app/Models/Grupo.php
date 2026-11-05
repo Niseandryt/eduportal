@@ -10,4 +10,5 @@ class Grupo extends Model
     /** @use HasFactory<\Database\Factories\GrupoFactory> */
     use HasFactory;
     protected $table = 'grupos';
+    protected $fillable = ['nombre', 'descripcion'];
 }

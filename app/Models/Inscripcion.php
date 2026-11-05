@@ -10,4 +10,6 @@ class Inscripcion extends Pivot
     /** @use HasFactory<\Database\Factories\InscripcionFactory> */
     use HasFactory;
     protected $table = 'inscripciones';
+    public $incrementing = true;
+    protected $fillable = ['grupo_id', 'user_id'];
 }
