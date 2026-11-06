@@ -2,29 +2,27 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Foro;
+use Illuminate\Database\Seeder;
 
 class ForoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $grupo_id = [1, 2, 3];
-        $user_id = [1, 2, 3];
+        // id 1 - creado por un alumno
+        Foro::create([
+            'grupo_id' => 1,
+            'user_id' => 3,
+            'titulo' => 'Error al ejecutar migraciones',
+            'contenido' => 'Me sale un error al correr php artisan migrate, alguien sabe por que?',
+        ]);
 
-        foreach ($user_id as $u_id) {
-            foreach ($grupo_id as $g_id) {
-                Foro::create([
-                    'user_id' => $u_id,
-                    'grupo_id' => $g_id,
-                    'titulo' => 'Título de ejemplo',
-                    'contenido' => 'Contenido de ejemplo',
-                ]);
-            }
-        }
+        // id 2 - creado por un maestro
+        Foro::create([
+            'grupo_id' => 1,
+            'user_id' => 1,
+            'titulo' => 'Dudas sobre la practica 13',
+            'contenido' => 'Escriban aqui sus dudas sobre Sanctum',
+        ]);
     }
 }

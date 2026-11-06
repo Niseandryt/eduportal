@@ -2,9 +2,6 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\GrupoSeeder;
-use Database\Seeders\InscripcionSeeder;
-use Database\Seeders\UserSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +18,11 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             GrupoSeeder::class,
             InscripcionSeeder::class,
+            TareaSeeder::class,
+            EntregaSeeder::class,
+            MaterialSeeder::class,
+            ForoSeeder::class,
+            RespuestaSeeder::class,
         ]);
     }
 }
