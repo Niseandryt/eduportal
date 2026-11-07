@@ -10,41 +10,36 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Maestros (id 1 y 2)
+        // Maestros (user id 1 y 2)
         User::create([
             'name' => 'Denis Lue',
             'email' => 'maestro@edutech.com',
             'password' => Hash::make('12345678'),
-            'tipo' => 'maestro',
-        ]);
+        ])->maestro()->create(['departamento' => 'Informatica']);
 
         User::create([
             'name' => 'Carlos Martinez',
             'email' => 'maestro2@edutech.com',
             'password' => Hash::make('12345678'),
-            'tipo' => 'maestro',
-        ]);
+        ])->maestro()->create(['departamento' => 'Matematica']);
 
-        // Alumnos (id 3, 4 y 5)
+        // Alumnos (user id 3, 4 y 5)
         User::create([
             'name' => 'Daniel Angel',
             'email' => 'alumno@edutech.com',
             'password' => Hash::make('12345678'),
-            'tipo' => 'alumno',
-        ]);
+        ])->alumno()->create(['carnet' => '20260001']);
 
         User::create([
             'name' => 'Karina Hidalgo',
             'email' => 'alumno2@edutech.com',
             'password' => Hash::make('12345678'),
-            'tipo' => 'alumno',
-        ]);
+        ])->alumno()->create(['carnet' => '20260002']);
 
         User::create([
             'name' => 'Ashley Vasquez',
             'email' => 'alumno3@edutech.com',
             'password' => Hash::make('12345678'),
-            'tipo' => 'alumno',
-        ]);
+        ])->alumno()->create(['carnet' => '20260003']);
     }
 }

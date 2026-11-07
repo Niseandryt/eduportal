@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Grupo;
+use App\Models\Maestro;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +19,9 @@ class GrupoFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'nombre' => fake()->unique()->bothify('GRP-####'),
+            'descripcion' => fake()->sentence(),
+            'maestro_id' => Maestro::factory(),
         ];
     }
 }

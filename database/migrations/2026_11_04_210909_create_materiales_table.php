@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('materiales', function (Blueprint $table) {
             $table->id();
             $table->foreignId('grupo_id')->constrained('grupos')->onDelete('cascade');
-            $table->foreignId('maestro_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('maestro_id')->constrained('maestros')->onDelete('cascade');
             $table->string('titulo');
             $table->text('descripcion')->nullable();
             $table->string('enlace')->nullable();

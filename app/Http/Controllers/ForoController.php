@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Foro;
+use Illuminate\Http\Request;
+
+class ForoController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $foros = Foro::with(['grupo', 'user'])
+            ->when($request->query('grupo_id'), fn ($q, $grupoId) => $q->where('grupo_id', $grupoId))
+            ->latest('created_at')
+            ->get();
+        return response()->json($foros, 200);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $datos = $request->validate([
+            'grupo_id' => 'required|exists:grupos,id',
+            'titulo' => 'required|string|max:255',
+            'contenido' => 'required|string',
+        ]);
+        $foro = Foro::create([...$datos, 'user_id' => $request->user()->id]);
+        return response()->json([
+            'mensaje' => 'Foro creado exitosamente',
+            'foro' => $foro->load(['grupo', 'user']),
+        ], 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Foro $foro)
+    {
+        return response()->json($foro->load(['grupo', 'user', 'respuestas.user']), 200);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Foro $foro)
+    {
+        $datos = $request->validate([
+            'titulo' => 'sometimes|required|string|max:255',
+            'contenido' => 'sometimes|required|string',
+        ]);
+        $foro->update($datos);
+        return response()->json([
+            'mensaje' => 'Foro actualizado exitosamente',
+            'foro' => $foro->load(['grupo', 'user']),
+        ], 200);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Foro $foro)
+    {
+        $foro->delete();
+        return response()->json([
+            'mensaje' => 'Foro eliminado exitosamente',
+        ], 200);
+    }
+}

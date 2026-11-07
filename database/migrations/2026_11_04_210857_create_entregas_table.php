@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('entregas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tarea_id')->constrained('tareas')->onDelete('cascade');
-            $table->foreignId('alumno_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('alumno_id')->constrained('alumnos')->onDelete('cascade');
             $table->text('contenido')->nullable();
             $table->decimal('calificacion', 4, 2)->nullable();
             $table->timestamps();

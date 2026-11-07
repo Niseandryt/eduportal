@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('grupos', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('maestro_id')->constrained('maestros')->onDelete('cascade');
             $table->string('nombre');
             $table->text('descripcion')->nullable();
             $table->timestamps();

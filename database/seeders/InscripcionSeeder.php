@@ -9,14 +9,12 @@ class InscripcionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Grupo 1: maestro 1 y los 3 alumnos
-        Inscripcion::create(['grupo_id' => 1, 'user_id' => 1]);
+        // Grupo 1: los 3 alumnos (el maestro 1 se asigna en grupos.maestro_id)
         Inscripcion::create(['grupo_id' => 1, 'user_id' => 3]);
         Inscripcion::create(['grupo_id' => 1, 'user_id' => 4]);
         Inscripcion::create(['grupo_id' => 1, 'user_id' => 5]);
 
-        // Grupo 2: maestro 2 y 2 alumnos
-        Inscripcion::create(['grupo_id' => 2, 'user_id' => 2]);
+        // Grupo 2: 2 alumnos
         Inscripcion::create(['grupo_id' => 2, 'user_id' => 3]);
         Inscripcion::create(['grupo_id' => 2, 'user_id' => 4]);
     }

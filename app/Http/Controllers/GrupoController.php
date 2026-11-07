@@ -12,7 +12,7 @@ class GrupoController extends Controller
      */
     public function index()
     {
-        return response()->json(Grupo::latest('created_at')->get(), 200);
+        return response()->json(Grupo::with('maestro.user')->latest('created_at')->get(), 200);
     }
 
 
@@ -21,13 +21,17 @@ class GrupoController extends Controller
      */
     public function store(Request $request)
     {
+        if (!$request->user()->esMaestro()) {
+            return response()->json(['mensaje' => 'Solo los maestros pueden crear grupos'], 403);
+        }
         $datos = $request->validate([
             'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
         ]);
-        $grupo = Grupo::create($datos);
+        $grupo = Grupo::create([...$datos, 'maestro_id' => $request->user()->maestro->id]);
         return response()->json([
             'mensaje' => 'Grupo creado exitosamente',
-            'grupo' => $grupo,
+            'grupo' => $grupo->load('maestro.user'),
         ], 201);
     }
 
@@ -36,7 +40,10 @@ class GrupoController extends Controller
      */
     public function show(Grupo $grupo)
     {
-        return response()->json($grupo, 200);
+        return response()->json(
+            $grupo->load(['maestro.user', 'users', 'tareas', 'materiales', 'foros']),
+            200
+        );
     }
 
 
@@ -45,24 +52,31 @@ class GrupoController extends Controller
      */
     public function update(Request $request, Grupo $grupo)
     {
+        if (!$request->user()->esMaestro()) {
+            return response()->json(['mensaje' => 'Solo los maestros pueden actualizar grupos'], 403);
+        }
         $datos = $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'sometimes|required|string|max:255',
+            'descripcion' => 'nullable|string',
         ]);
         $grupo->update($datos);
         return response()->json([
             'mensaje' => 'Grupo actualizado exitosamente',
-            'grupo' => $grupo,
+            'grupo' => $grupo->load('maestro.user'),
         ], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Grupo $grupo)
+    public function destroy(Request $request, Grupo $grupo)
     {
+        if (!$request->user()->esMaestro()) {
+            return response()->json(['mensaje' => 'Solo los maestros pueden eliminar grupos'], 403);
+        }
         $grupo->delete();
         return response()->json([
             'mensaje' => 'Grupo eliminado exitosamente',
-        ], 204);
+        ], 200);
     }
 }

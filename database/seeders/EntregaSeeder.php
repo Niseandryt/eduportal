@@ -14,16 +14,17 @@ class EntregaSeeder extends Seeder
     {
         //
 
+        // alumno_id ahora referencia a la tabla alumnos (1 = Daniel, 2 = Karina)
         Entrega::create([
             'tarea_id' => 1,
-            'alumno_id' => 3,
+            'alumno_id' => 1,
             'contenido' => 'https://github.com/alumno/practica11',
             'calificacion' => 9.50,
         ]);
 
         Entrega::create([
             'tarea_id' => 1,
-            'alumno_id' => 4,
+            'alumno_id' => 2,
             'contenido' => 'https://github.com/alumno2/practica11',
             'calificacion' => 8.00,
         ]);

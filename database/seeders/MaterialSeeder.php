@@ -15,14 +15,12 @@ class MaterialSeeder extends Seeder
     {
         //
 
-        Material::created ([
+        Material::create([
             'grupo_id' => 1,
             'maestro_id' => 1,
             'titulo' => 'Guia de Postman',
             'descripcion' => 'Como probar una API con Postman',
             'enlace' => 'https://learning.postman.com',
-
-            
         ]);
     }
 }

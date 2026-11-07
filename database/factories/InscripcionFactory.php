@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Grupo;
 use App\Models\Inscripcion;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +20,8 @@ class InscripcionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'grupo_id' => Grupo::factory(),
+            'user_id' => User::factory(),
         ];
     }
 }
