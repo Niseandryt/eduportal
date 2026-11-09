@@ -1,0 +1,110 @@
+﻿<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/foros" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Foro</ion-title>
+    @if (foro(); as f) {
+      @if (esAutor(f.user_id)) {
+        <ion-buttons slot="end">
+          <ion-button (click)="empezarEdicionForo(f)" title="Editar foro">
+            <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      }
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (cargando()) {
+    <div class="centrado"><ion-spinner name="crescent"></ion-spinner></div>
+  } @else if (foro(); as f) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ f.titulo }}</ion-card-title>
+        <ion-card-subtitle>{{ f.grupo?.nombre }} · {{ f.user?.name }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>{{ f.contenido }}</ion-card-content>
+    </ion-card>
+
+    @if (editandoForo()) {
+      <ion-card>
+        <ion-card-content>
+          <ion-item>
+            <ion-label position="stacked">Titulo</ion-label>
+            <ion-input name="editTitulo" [(ngModel)]="editTitulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Contenido</ion-label>
+            <ion-textarea name="editContenido" [(ngModel)]="editContenido" required></ion-textarea>
+          </ion-item>
+          <ion-button class="ion-margin-top" (click)="guardarEdicionForo(f)">Guardar</ion-button>
+          <ion-button fill="clear" class="ion-margin-top" (click)="editandoForo.set(false)">Cancelar</ion-button>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    <ion-list>
+      <ion-item lines="none">
+        <ion-label><strong>Respuestas ({{ f.respuestas?.length ?? 0 }})</strong></ion-label>
+      </ion-item>
+      @for (respuesta of f.respuestas; track respuesta.id) {
+        <ion-item>
+          <ion-icon slot="start" icon="chatbubble-outline"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <h2>{{ respuesta.user?.name }}</h2>
+            <p>{{ respuesta.contenido }}</p>
+          </ion-label>
+          @if (esAutor(respuesta.user_id)) {
+            <ion-button slot="end" fill="clear" (click)="empezarEdicionRespuesta(respuesta)" title="Editar">
+              <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button slot="end" fill="clear" color="danger" (click)="eliminarRespuesta(respuesta)" title="Eliminar">
+              <ion-icon slot="icon-only" icon="trash-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+
+        @if (editandoRespuestaId() === respuesta.id) {
+          <ion-item>
+            <ion-label position="stacked">Respuesta</ion-label>
+            <ion-textarea name="editRespuesta" [(ngModel)]="editRespuestaContenido" required></ion-textarea>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="guardarEdicionRespuesta(respuesta)">Guardar</ion-button>
+            <ion-button fill="clear" (click)="editandoRespuestaId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+      } @empty {
+        <ion-item lines="none">
+          <ion-note>Aun no hay respuestas.</ion-note>
+        </ion-item>
+      }
+    </ion-list>
+
+    <ion-card>
+      <ion-card-content>
+        <form (ngSubmit)="responder()">
+          <ion-item>
+            <ion-textarea
+              label="Escribe una respuesta"
+              labelPlacement="floating"
+              name="contenido"
+              [(ngModel)]="contenido"
+              required
+            ></ion-textarea>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="ion-margin-top">
+            <ion-icon slot="start" icon="send-outline"></ion-icon>
+            Responder
+          </ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (error()) {
+    <ion-note color="danger" class="ion-padding">{{ error() }}</ion-note>
+  }
+</ion-content>

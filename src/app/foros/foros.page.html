@@ -1,0 +1,84 @@
+﻿<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Foros</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="mostrarFormulario.set(!mostrarFormulario())">
+        <ion-icon slot="icon-only" icon="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (mostrarFormulario()) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Nuevo foro</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form (ngSubmit)="crear()">
+          <ion-item>
+            <ion-select label="Grupo" labelPlacement="floating" name="grupo" [(ngModel)]="grupoId" required>
+              @for (grupo of grupos(); track grupo.id) {
+                <ion-select-option [value]="grupo.id">{{ grupo.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Titulo" labelPlacement="floating" name="titulo" [(ngModel)]="titulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-textarea label="Contenido" labelPlacement="floating" name="contenido" [(ngModel)]="contenido" required></ion-textarea>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="ion-margin-top">Publicar</ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (cargando()) {
+    <div class="centrado"><ion-spinner name="crescent"></ion-spinner></div>
+  } @else if (foros().length === 0) {
+    <ion-note>No hay foros creados.</ion-note>
+  } @else {
+    <ion-list>
+      @for (foro of foros(); track foro.id) {
+        <ion-item button [routerLink]="['/foros', foro.id]" detail="true">
+          <ion-icon slot="start" icon="chatbubbles-outline"></ion-icon>
+          <ion-label>
+            <h2>{{ foro.titulo }}</h2>
+            <p>{{ foro.contenido }}</p>
+            <p>{{ foro.grupo?.nombre }} · {{ foro.user?.name }}</p>
+          </ion-label>
+          @if (esAutor(foro)) {
+            <ion-button slot="end" fill="clear" (click)="$event.preventDefault(); $event.stopPropagation(); empezarEdicion(foro)" title="Editar">
+              <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+
+        @if (editandoId() === foro.id) {
+          <ion-item>
+            <ion-label position="stacked">Titulo</ion-label>
+            <ion-input name="editTitulo" [(ngModel)]="editTitulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Contenido</ion-label>
+            <ion-textarea name="editContenido" [(ngModel)]="editContenido" required></ion-textarea>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="guardarEdicion(foro)">Guardar</ion-button>
+            <ion-button fill="clear" (click)="editandoId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+      }
+    </ion-list>
+  }
+
+  @if (error()) {
+    <ion-note color="danger" class="ion-padding">{{ error() }}</ion-note>
+  }
+</ion-content>

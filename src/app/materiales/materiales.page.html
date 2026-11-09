@@ -1,0 +1,98 @@
+﻿<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Materiales</ion-title>
+    @if (auth.esMaestro()) {
+      <ion-buttons slot="end">
+        <ion-button (click)="mostrarFormulario.set(!mostrarFormulario())">
+          <ion-icon slot="icon-only" icon="add-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (mostrarFormulario()) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Nuevo material</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form (ngSubmit)="crear()">
+          <ion-item>
+            <ion-select label="Grupo" labelPlacement="floating" name="grupo" [(ngModel)]="grupoId" required>
+              @for (grupo of grupos(); track grupo.id) {
+                <ion-select-option [value]="grupo.id">{{ grupo.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Titulo" labelPlacement="floating" name="titulo" [(ngModel)]="titulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-textarea label="Descripcion" labelPlacement="floating" name="descripcion" [(ngModel)]="descripcion"></ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Enlace" labelPlacement="floating" type="url" name="enlace" [(ngModel)]="enlace" placeholder="https://..."></ion-input>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="ion-margin-top">Crear</ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (cargando()) {
+    <div class="centrado"><ion-spinner name="crescent"></ion-spinner></div>
+  } @else if (materiales().length === 0) {
+    <ion-note>No hay materiales creados.</ion-note>
+  } @else {
+    <ion-list>
+      @for (material of materiales(); track material.id) {
+        <ion-item>
+          <ion-icon slot="start" icon="library-outline"></ion-icon>
+          <ion-label>
+            <h2>{{ material.titulo }}</h2>
+            <p>{{ material.descripcion }}</p>
+            <p>{{ material.grupo?.nombre }}</p>
+          </ion-label>
+          @if (material.enlace) {
+            <ion-button slot="end" fill="clear" [href]="material.enlace" target="_blank" rel="noopener noreferrer" title="Abrir enlace">
+              <ion-icon slot="icon-only" icon="open-outline"></ion-icon>
+            </ion-button>
+          }
+          @if (auth.esMaestro()) {
+            <ion-button slot="end" fill="clear" (click)="empezarEdicion(material)" title="Editar">
+              <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+
+        @if (editandoId() === material.id) {
+          <ion-item>
+            <ion-label position="stacked">Titulo</ion-label>
+            <ion-input name="editTitulo" [(ngModel)]="editTitulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Descripcion</ion-label>
+            <ion-textarea name="editDescripcion" [(ngModel)]="editDescripcion"></ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Enlace</ion-label>
+            <ion-input type="url" name="editEnlace" [(ngModel)]="editEnlace"></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="guardarEdicion(material)">Guardar</ion-button>
+            <ion-button fill="clear" (click)="editandoId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+      }
+    </ion-list>
+  }
+
+  @if (error()) {
+    <ion-note color="danger" class="ion-padding">{{ error() }}</ion-note>
+  }
+</ion-content>

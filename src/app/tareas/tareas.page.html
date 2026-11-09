@@ -1,0 +1,159 @@
+﻿<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Tareas</ion-title>
+    @if (auth.esMaestro()) {
+      <ion-buttons slot="end">
+        <ion-button (click)="mostrarFormulario.set(!mostrarFormulario())">
+          <ion-icon slot="icon-only" icon="add-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (mostrarFormulario()) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Nueva tarea</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form (ngSubmit)="crear()">
+          <ion-item>
+            <ion-select label="Grupo" labelPlacement="floating" name="grupo" [(ngModel)]="grupoId" required>
+              @for (grupo of grupos(); track grupo.id) {
+                <ion-select-option [value]="grupo.id">{{ grupo.nombre }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Titulo" labelPlacement="floating" name="titulo" [(ngModel)]="titulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-textarea label="Descripcion" labelPlacement="floating" name="descripcion" [(ngModel)]="descripcion"></ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-input label="Fecha de entrega" labelPlacement="floating" type="date" name="fecha" [(ngModel)]="fechaEntrega"></ion-input>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="ion-margin-top">Crear</ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (cargando()) {
+    <div class="centrado"><ion-spinner name="crescent"></ion-spinner></div>
+  } @else if (tareas().length === 0) {
+    <ion-note>No hay tareas creadas.</ion-note>
+  } @else {
+    <ion-list>
+      @for (tarea of tareas(); track tarea.id) {
+        <ion-item>
+          <ion-icon slot="start" icon="clipboard-outline"></ion-icon>
+          <ion-label>
+            <h2>{{ tarea.titulo }}</h2>
+            <p>{{ tarea.descripcion }}</p>
+            <p>
+              {{ tarea.grupo?.nombre }}
+              @if (tarea.fecha_entrega) {
+                · Entrega: {{ tarea.fecha_entrega }}
+              }
+            </p>
+            @if (auth.esAlumno()) {
+              @if (miEntrega(tarea.id); as entrega) {
+                <p>
+                  Entregado
+                  @if (entrega.calificacion) {
+                    · Calificacion: {{ entrega.calificacion }}
+                  } @else {
+                    · Sin calificar
+                  }
+                </p>
+              }
+            }
+          </ion-label>
+          @if (auth.esMaestro()) {
+            <ion-button slot="end" fill="clear" (click)="empezarEdicion(tarea)" title="Editar">
+              <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button slot="end" fill="clear" (click)="alternarEntregas(tarea)" title="Entregas">
+              <ion-icon slot="icon-only" icon="list-outline"></ion-icon>
+            </ion-button>
+          } @else if (!miEntrega(tarea.id)) {
+            <ion-button slot="end" fill="clear" (click)="entregandoId.set(entregandoId() === tarea.id ? null : tarea.id)" title="Entregar">
+              <ion-icon slot="icon-only" icon="send-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+
+        @if (editandoId() === tarea.id) {
+          <ion-item>
+            <ion-label position="stacked">Titulo</ion-label>
+            <ion-input name="editTitulo" [(ngModel)]="editTitulo" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Descripcion</ion-label>
+            <ion-textarea name="editDescripcion" [(ngModel)]="editDescripcion"></ion-textarea>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Fecha de entrega</ion-label>
+            <ion-input type="date" name="editFecha" [(ngModel)]="editFecha"></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="guardarEdicion(tarea)">Guardar</ion-button>
+            <ion-button fill="clear" (click)="editandoId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+
+        @if (entregandoId() === tarea.id) {
+          <ion-item>
+            <ion-label position="stacked">Contenido de la entrega</ion-label>
+            <ion-textarea name="entregaContenido" [(ngModel)]="entregaContenido" placeholder="Enlace o texto de tu entrega" required></ion-textarea>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="entregar(tarea)" [disabled]="!entregaContenido.trim()">Entregar</ion-button>
+            <ion-button fill="clear" (click)="entregandoId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+
+        @if (entregasId() === tarea.id) {
+          @for (entrega of entregas(); track entrega.id) {
+            <ion-item>
+              <ion-label>
+                <h3>{{ entrega.alumno?.user?.name }} ({{ entrega.alumno?.carnet }})</h3>
+                <p>{{ entrega.contenido }}</p>
+                @if (entrega.calificacion) {
+                  <p>Calificacion: {{ entrega.calificacion }}</p>
+                }
+              </ion-label>
+              <ion-input
+                slot="end"
+                class="nota-input"
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                placeholder="Nota"
+                [ngModel]="calificaciones[entrega.id] ?? ''"
+                (ngModelChange)="calificaciones[entrega.id] = $event"
+                [ngModelOptions]="{ standalone: true }"
+              ></ion-input>
+              <ion-button slot="end" fill="clear" (click)="calificar(entrega)">Calificar</ion-button>
+            </ion-item>
+          } @empty {
+            <ion-item lines="none">
+              <ion-note>Sin entregas todavia.</ion-note>
+            </ion-item>
+          }
+        }
+      }
+    </ion-list>
+  }
+
+  @if (error()) {
+    <ion-note color="danger" class="ion-padding">{{ error() }}</ion-note>
+  }
+</ion-content>

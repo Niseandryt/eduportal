@@ -1,0 +1,49 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Mi Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (auth.user(); as usuario) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ usuario.name }}</ion-card-title>
+        <ion-card-subtitle>
+          {{ auth.esMaestro() ? 'Maestro' : 'Alumno' }}
+        </ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-icon slot="start" icon="mail-outline"></ion-icon>
+            <ion-label>{{ usuario.email }}</ion-label>
+          </ion-item>
+          @if (usuario.alumno; as alumno) {
+            <ion-item>
+              <ion-icon slot="start" icon="id-card-outline"></ion-icon>
+              <ion-label>
+                <h2>Carnet</h2>
+                <p>{{ alumno.carnet }}</p>
+              </ion-label>
+            </ion-item>
+          }
+          @if (usuario.maestro; as maestro) {
+            <ion-item>
+              <ion-icon slot="start" icon="briefcase-outline"></ion-icon>
+              <ion-label>
+                <h2>Departamento</h2>
+                <p>{{ maestro.departamento }}</p>
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  } @else {
+    <ion-note>No hay sesion activa.</ion-note>
+  }
+</ion-content>

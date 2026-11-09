@@ -1,0 +1,115 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>{{ auth.esMaestro() ? 'Grupos' : 'Mis Grupos' }}</ion-title>
+    @if (auth.esMaestro()) {
+      <ion-buttons slot="end">
+        <ion-button (click)="mostrarFormulario.set(!mostrarFormulario())">
+          <ion-icon slot="icon-only" icon="add-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (mostrarFormulario()) {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Nuevo grupo</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form (ngSubmit)="crear()">
+          <ion-item>
+            <ion-input label="Nombre" labelPlacement="floating" name="nombre" [(ngModel)]="nombre" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-textarea label="Descripcion" labelPlacement="floating" name="descripcion" [(ngModel)]="descripcion"></ion-textarea>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="ion-margin-top">Crear</ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  @if (cargando()) {
+    <div class="centrado"><ion-spinner name="crescent"></ion-spinner></div>
+  } @else if (grupos().length === 0) {
+    <ion-note>No hay grupos para mostrar.</ion-note>
+  } @else {
+    <ion-list>
+      @for (grupo of grupos(); track grupo.id) {
+        <ion-item>
+          <ion-icon slot="start" icon="people-outline"></ion-icon>
+          <ion-label>
+            <h2>{{ grupo.nombre }}</h2>
+            <p>{{ grupo.descripcion }}</p>
+            @if (grupo.maestro?.user; as maestro) {
+              <p>Maestro: {{ maestro.name }}</p>
+            }
+          </ion-label>
+          @if (auth.esMaestro()) {
+            <ion-button slot="end" fill="clear" (click)="empezarEdicion(grupo)" title="Editar">
+              <ion-icon slot="icon-only" icon="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button slot="end" fill="clear" (click)="alternarInscripcion(grupo)" title="Inscribir alumnos">
+              <ion-icon slot="icon-only" icon="person-add-outline"></ion-icon>
+            </ion-button>
+          }
+        </ion-item>
+
+        @if (editandoId() === grupo.id) {
+          <ion-item>
+            <ion-label position="stacked">Nombre</ion-label>
+            <ion-input name="editNombre" [(ngModel)]="editNombre" required></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="stacked">Descripcion</ion-label>
+            <ion-textarea name="editDescripcion" [(ngModel)]="editDescripcion"></ion-textarea>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-button (click)="guardarEdicion(grupo)">Guardar</ion-button>
+            <ion-button fill="clear" (click)="editandoId.set(null)">Cancelar</ion-button>
+          </ion-item>
+        }
+
+        @if (inscribiendoId() === grupo.id) {
+          <ion-item>
+            <ion-label position="stacked">Alumno</ion-label>
+            <ion-select name="alumno" [(ngModel)]="alumnoSeleccionado" placeholder="Selecciona un alumno">
+              @for (alumno of alumnos(); track alumno.id) {
+                <ion-select-option [value]="alumno.id">
+                  {{ alumno.name }} ({{ alumno.alumno?.carnet }})
+                </ion-select-option>
+              }
+            </ion-select>
+            <ion-button slot="end" (click)="inscribir(grupo)" [disabled]="!alumnoSeleccionado">
+              Inscribir
+            </ion-button>
+          </ion-item>
+          @for (inscripcion of inscripciones(); track inscripcion.id) {
+            <ion-item>
+              <ion-label>
+                {{ inscripcion.user?.name }}
+                <p>{{ inscripcion.user?.alumno?.carnet }}</p>
+              </ion-label>
+              <ion-button slot="end" fill="clear" color="danger" (click)="quitar(inscripcion)" title="Quitar">
+                <ion-icon slot="icon-only" icon="close-outline"></ion-icon>
+              </ion-button>
+            </ion-item>
+          } @empty {
+            <ion-item lines="none">
+              <ion-note>Sin alumnos inscritos.</ion-note>
+            </ion-item>
+          }
+        }
+      }
+    </ion-list>
+  }
+
+  @if (error()) {
+    <ion-note color="danger" class="ion-padding">{{ error() }}</ion-note>
+  }
+</ion-content>

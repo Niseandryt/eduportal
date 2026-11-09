@@ -1,27 +1,51 @@
-
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink } from '@ionic/angular';
+import {
+  IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote,
+  IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterOutlet, IonRouterLink,
+} from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp } from 'ionicons/icons';
+import {
+  personCircleOutline, personCircleSharp, peopleOutline, peopleSharp,
+  clipboardOutline, clipboardSharp, libraryOutline, librarySharp,
+  chatbubblesOutline, chatbubblesSharp, logOutOutline, logOutSharp,
+} from 'ionicons/icons';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
-  imports: [RouterLink, RouterLinkActive, IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel, IonRouterLink, IonRouterOutlet],
+  imports: [
+    RouterLink, RouterLinkActive, IonApp, IonSplitPane, IonMenu, IonContent,
+    IonList, IonListHeader, IonNote, IonMenuToggle, IonItem, IonIcon, IonLabel,
+    IonRouterLink, IonRouterOutlet,
+  ],
 })
 export class AppComponent {
-  protected readonly appPages = [
-    { title: 'Inbox', url: '/folder/Inbox', icon: 'mail' },
-    { title: 'Outbox', url: '/folder/Outbox', icon: 'paper-plane' },
-    { title: 'Favorites', url: '/folder/Favorites', icon: 'heart' },
-    { title: 'Archived', url: '/folder/Archived', icon: 'archive' },
-    { title: 'Trash', url: '/folder/Trash', icon: 'trash' },
-    { title: 'Spam', url: '/folder/Spam', icon: 'warning' },
-  ];
-  protected readonly labels = ['Family', 'Friends', 'Notes', 'Work', 'Travel', 'Reminders'];
+  protected readonly auth = inject(AuthService);
+
+  protected readonly appPages = computed(() => [
+    { title: 'Perfil', url: '/perfil', icon: 'person-circle' },
+    {
+      title: this.auth.esMaestro() ? 'Grupos' : 'Mis Grupos',
+      url: '/grupos',
+      icon: 'people',
+    },
+    { title: 'Tareas', url: '/tareas', icon: 'clipboard' },
+    { title: 'Materiales', url: '/materiales', icon: 'library' },
+    { title: 'Foros', url: '/foros', icon: 'chatbubbles' },
+  ]);
+
   constructor() {
-    addIcons({ mailOutline, mailSharp, paperPlaneOutline, paperPlaneSharp, heartOutline, heartSharp, archiveOutline, archiveSharp, trashOutline, trashSharp, warningOutline, warningSharp, bookmarkOutline, bookmarkSharp });
+    addIcons({
+      personCircleOutline, personCircleSharp, peopleOutline, peopleSharp,
+      clipboardOutline, clipboardSharp, libraryOutline, librarySharp,
+      chatbubblesOutline, chatbubblesSharp, logOutOutline, logOutSharp,
+    });
+  }
+
+  protected cerrarSesion(): void {
+    this.auth.logout();
   }
 }

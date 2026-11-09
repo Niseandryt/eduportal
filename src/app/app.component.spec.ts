@@ -1,50 +1,84 @@
 import { TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { provideRouter, Router, RouterLink } from '@angular/router';
+import { provideRouter } from '@angular/router';
 
 import { AppComponent } from './app.component';
+import { TOKEN_KEY, USER_KEY } from './services/api.client';
+import { User } from './models';
+
+const maestro: User = {
+  id: 1,
+  name: 'Denis Lue',
+  email: 'maestro@edutech.com',
+  alumno: null,
+  maestro: { id: 1, user_id: 1, departamento: 'Informatica' },
+};
+
+const alumno: User = {
+  id: 3,
+  name: 'Daniel Angel',
+  email: 'alumno@edutech.com',
+  alumno: { id: 1, user_id: 3, carnet: '20260001' },
+  maestro: null,
+};
+
+function simularSesion(user: User | null): void {
+  sessionStorage.clear();
+  if (user) {
+    sessionStorage.setItem(TOKEN_KEY, 'token-de-prueba');
+    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+}
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
+  afterEach(() => sessionStorage.clear());
+
   it('should create the app', () => {
+    simularSesion(null);
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should have menu labels', async () => {
+  it('should not show the menu when there is no session', async () => {
+    simularSesion(null);
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    // ion-label is a scoped Stencil component whose slot content is relocated
-    // asynchronously, so wait for hydration before reading textContent (ROU-10799).
     await fixture.whenStable();
-    const app = fixture.nativeElement;
-    const menuItems = app.querySelectorAll('ion-label');
-    expect(menuItems.length).toEqual(12);
-    expect(menuItems[0].innerHTML).toContain('Inbox');
-    expect(menuItems[1].innerHTML).toContain('Outbox');
+    expect(fixture.nativeElement.querySelector('ion-menu')).toBeNull();
   });
 
-  it('should have urls', () => {
+  it('should show all menu items for maestros', async () => {
+    simularSesion(maestro);
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const app = fixture.nativeElement;
-    expect(app.querySelectorAll('ion-item').length).toEqual(12);
-    // Ionic applies the rendered href through its own async write queue, so
-    // reading the DOM attribute is flaky (FW-6264). Assert the routerLink
-    // binding directly, which resolves synchronously.
-    const router = TestBed.inject(Router);
-    const links = fixture.debugElement
-      .queryAll(By.directive(RouterLink))
-      .map((el) => el.injector.get(RouterLink));
-    expect(links.length).toEqual(6);
-    expect(router.serializeUrl(links[0].urlTree!)).toEqual('/folder/Inbox');
-    expect(router.serializeUrl(links[1].urlTree!)).toEqual('/folder/Outbox');
+    // ion-label es un componente Stencil cuyo contenido se reubica de forma
+    // asincrona; esperar a la hidratacion antes de leer textContent (ROU-10799).
+    await fixture.whenStable();
+    const textos = Array.from(
+      fixture.nativeElement.querySelectorAll('ion-label') as NodeListOf<HTMLElement>,
+    ).map((el) => el.innerHTML);
+    expect(textos.some((t) => t.includes('Grupos'))).toBe(true);
+    expect(textos.some((t) => t.includes('Tareas'))).toBe(true);
+    expect(textos.some((t) => t.includes('Materiales'))).toBe(true);
+    expect(textos.some((t) => t.includes('Perfil'))).toBe(true);
+  });
+
+  it('should show tareas and materiales to alumnos too', async () => {
+    simularSesion(alumno);
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const textos = Array.from(
+      fixture.nativeElement.querySelectorAll('ion-label') as NodeListOf<HTMLElement>,
+    ).map((el) => el.innerHTML);
+    expect(textos.some((t) => t.includes('Mis Grupos'))).toBe(true);
+    expect(textos.some((t) => t.includes('Tareas'))).toBe(true);
+    expect(textos.some((t) => t.includes('Materiales'))).toBe(true);
   });
 });
