@@ -86,4 +86,57 @@ class ForoRespuestaTest extends TestCase
             'contenido' => 'X',
         ])->assertUnprocessable();
     }
+
+    public function test_solo_el_autor_puede_editar_foro(): void
+    {
+        $autor = Alumno::factory()->create();
+        $foro = Foro::create([
+            'grupo_id' => Grupo::factory()->create()->id,
+            'user_id' => $autor->user_id,
+            'titulo' => 'Original',
+            'contenido' => 'Contenido',
+        ]);
+
+        // Otro usuario no puede
+        Sanctum::actingAs(Alumno::factory()->create()->user);
+        $this->putJson("/api/foros/{$foro->id}", ['titulo' => 'Modificado'])->assertForbidden();
+        $this->deleteJson("/api/foros/{$foro->id}")->assertForbidden();
+
+        // El autor si puede
+        Sanctum::actingAs($autor->user);
+        $this->putJson("/api/foros/{$foro->id}", ['titulo' => 'Modificado'])
+            ->assertOk()
+            ->assertJsonPath('foro.titulo', 'Modificado');
+        $this->deleteJson("/api/foros/{$foro->id}")->assertOk();
+        $this->assertDatabaseMissing('foros', ['id' => $foro->id]);
+    }
+
+    public function test_solo_el_autor_puede_editar_respuesta(): void
+    {
+        $foro = Foro::create([
+            'grupo_id' => Grupo::factory()->create()->id,
+            'user_id' => Alumno::factory()->create()->user_id,
+            'titulo' => 'Duda',
+            'contenido' => 'Contenido',
+        ]);
+        $autor = Alumno::factory()->create();
+        $respuesta = Respuesta::create([
+            'foro_id' => $foro->id,
+            'user_id' => $autor->user_id,
+            'contenido' => 'Original',
+        ]);
+
+        // Otro usuario no puede
+        Sanctum::actingAs(Alumno::factory()->create()->user);
+        $this->putJson("/api/respuestas/{$respuesta->id}", ['contenido' => 'Modificado'])->assertForbidden();
+        $this->deleteJson("/api/respuestas/{$respuesta->id}")->assertForbidden();
+
+        // El autor si puede
+        Sanctum::actingAs($autor->user);
+        $this->putJson("/api/respuestas/{$respuesta->id}", ['contenido' => 'Modificado'])
+            ->assertOk()
+            ->assertJsonPath('respuesta.contenido', 'Modificado');
+        $this->deleteJson("/api/respuestas/{$respuesta->id}")->assertOk();
+        $this->assertDatabaseMissing('respuestas', ['id' => $respuesta->id]);
+    }
 }

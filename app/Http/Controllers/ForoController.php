@@ -49,6 +49,9 @@ class ForoController extends Controller
      */
     public function update(Request $request, Foro $foro)
     {
+        if ($foro->user_id !== $request->user()->id) {
+            return response()->json(['mensaje' => 'Solo el autor puede editar este foro'], 403);
+        }
         $datos = $request->validate([
             'titulo' => 'sometimes|required|string|max:255',
             'contenido' => 'sometimes|required|string',
@@ -63,8 +66,11 @@ class ForoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Foro $foro)
+    public function destroy(Request $request, Foro $foro)
     {
+        if ($foro->user_id !== $request->user()->id) {
+            return response()->json(['mensaje' => 'Solo el autor puede eliminar este foro'], 403);
+        }
         $foro->delete();
         return response()->json([
             'mensaje' => 'Foro eliminado exitosamente',

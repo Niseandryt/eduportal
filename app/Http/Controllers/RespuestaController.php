@@ -48,6 +48,9 @@ class RespuestaController extends Controller
      */
     public function update(Request $request, Respuesta $respuesta)
     {
+        if ($respuesta->user_id !== $request->user()->id) {
+            return response()->json(['mensaje' => 'Solo el autor puede editar esta respuesta'], 403);
+        }
         $datos = $request->validate([
             'contenido' => 'sometimes|required|string',
         ]);
@@ -61,8 +64,11 @@ class RespuestaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Respuesta $respuesta)
+    public function destroy(Request $request, Respuesta $respuesta)
     {
+        if ($respuesta->user_id !== $request->user()->id) {
+            return response()->json(['mensaje' => 'Solo el autor puede eliminar esta respuesta'], 403);
+        }
         $respuesta->delete();
         return response()->json([
             'mensaje' => 'Respuesta eliminada exitosamente',
