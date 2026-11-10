@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   // Base URL de la API Laravel. 
-  apiUrl: 'http://127.0.0.1:8000/api',
+  apiUrl: 'http://192.168.1.2:8000/api',
 };
 
 /*
