@@ -1,73 +1,99 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+﻿# EduPortal API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST en Laravel para una plataforma educativa minima (estilo Moodle). Expone JSON para el frontend Ionic en `../../eduportal`.
 
-## Project Setup
+- **Stack:** Laravel 13, PHP 8.3+, SQLite, Sanctum (tokens Bearer)
+- **Roles:** multi-tabla — un `User` tiene un perfil `Alumno` (carnet) **o** `Maestro` (departamento), nunca ambos (validado en modelo y controlador)
+- **Recursos:** users, grupos, inscripciones, tareas, entregas, materiales, foros, respuestas
+- **Locale:** `es` — los errores de validacion (422) llegan en espanol
 
-To clone this branch onto an empty folder use this in the VSCode terminal
-`git clone -b api https://github.com/Niseandryt/eduportal.git`
-In order to set up your project after cloning the git repository, run these commands in the terminal
-```bash
-    npm install
-    composer install
-    cp .env.example .env
-    php artisan key:generate
-    php artisan migrate:fresh --seed
-    php artisan serve
-```
-F. Axel
+## Requisitos
 
-## About Laravel
+- PHP 8.3+ y Composer
+- Node.js 20+ (para las herramientas de frontend del skeleton)
+- SQLite (viene con PHP; no requiere servidor aparte)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan optimize
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Ejecutar
 
-## Contributing
+### Local (mismo PC que el frontend)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan serve
+```
 
-## Code of Conduct
+La API queda en `http://127.0.0.1:8000/api`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Red local / dispositivo fisico
 
-## Security Vulnerabilities
+```bash
+php artisan serve --host=0.0.0.0
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Accesible desde otros dispositivos en `http://<ip-local>:8000/api` (ej. `http://192.168.1.2:8000/api`).
 
-## License
+### Android con ngrok (HTTPS temporal)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Android exige HTTPS en produccion. Para exponer la API local con un subdominio temporal:
+
+```bash
+# Terminal 1: la API escuchando en todas las interfaces
+php artisan serve --host=0.0.0.0
+
+# Terminal 2: tunel HTTPS hacia el puerto 8000
+ngrok http 8000
+```
+
+ngrok muestra una URL tipo `https://xxxxx.ngrok.app`. Colocala en el frontend:
+
+```ts
+// eduportal/src/environments/environment.prod.ts
+apiUrl: 'https://xxxxx.ngrok.app/api',
+```
+
+y reconstruye la app (`npm run build` + `npx cap sync android`).
+
+## Usuarios de prueba (seed)
+
+| Rol     | Email                | Password  | Perfil                    |
+| ------- | -------------------- | --------- | ------------------------- |
+| Maestro | maestro@edutech.com  | 12345678  | Departamento: Informatica |
+| Maestro | maestro2@edutech.com | 12345678  | Departamento: Matematica  |
+| Alumno  | alumno@edutech.com   | 12345678  | Carnet: 20260001          |
+| Alumno  | alumno2@edutech.com  | 12345678  | Carnet: 20260002          |
+| Alumno  | alumno3@edutech.com  | 12345678  | Carnet: 20260003          |
+
+## Endpoints
+
+Publicos:
+
+- `POST /api/register` — body: `name`, `email`, `password`, `password_confirmation`, y **solo uno** de `carnet` (alumno) o `departamento` (maestro)
+- `POST /api/login` — devuelve `{ token, user }`
+
+Con `Authorization: Bearer <token>`:
+
+- `POST /api/logout`
+- `apiResource users` (sin `store`; el registro es publico)
+- `apiResource grupos` — crear/editar/eliminar solo maestros
+- `apiResource inscripciones` — filtros `?grupo_id=` `?user_id=`
+- `apiResource tareas` — crear/editar/eliminar solo maestros; filtro `?grupo_id=`
+- `apiResource entregas` — crear solo alumnos (una por tarea); calificar solo maestros; filtros `?tarea_id=` `?alumno_id=`
+- `apiResource materiales` — crear/editar/eliminar solo maestros; filtro `?grupo_id=`
+- `apiResource foros` — editar/eliminar solo el autor; filtro `?grupo_id=`
+- `apiResource respuestas` — editar/eliminar solo el autor; filtro `?foro_id=`
+
+## Pruebas
+
+```bash
+php artisan test
+```
