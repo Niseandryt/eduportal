@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://192.168.1.2:8000/api',
+  apiUrl: 'https://xxxxx.ngrok.app/api', // reemplazar xxxxx con el subdominio de ngrok
 };
