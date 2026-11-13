@@ -6,6 +6,10 @@ App movil/web en Ionic + Angular (standalone) + Capacitor. Consume la API Larave
 - **Auth:** token Bearer en `sessionStorage` (ver `src/app/services/auth.service.ts`); interceptor axios lo adjunta y redirige a `/login` en 401
 - **Roles:** el menu y los botones se adaptan segun `esMaestro()` / `esAlumno()`; las rutas estan protegidas con guards (`src/app/guards/auth.guard.ts`)
 
+Los grupos, tareas, materiales y foros se muestran segun la membresia
+verificada por la API: usuarios inscritos y el maestro asignado. Si un usuario
+no pertenece a ningun grupo, las listas aparecen vacias.
+
 ## Requisitos
 
 - Node.js 20+ y npm

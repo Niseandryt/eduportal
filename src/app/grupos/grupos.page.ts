@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent,
@@ -24,7 +24,7 @@ import { Grupo, Inscripcion, User } from '../models';
     IonTextarea, IonSelect, IonSelectOption,
   ],
 })
-export class GruposPage implements OnInit {
+export class GruposPage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
 
@@ -51,7 +51,7 @@ export class GruposPage implements OnInit {
     addIcons({ addOutline, peopleOutline, createOutline, personAddOutline, closeOutline });
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.cargar();
   }
 
@@ -59,15 +59,9 @@ export class GruposPage implements OnInit {
     this.cargando.set(true);
     this.error.set('');
     try {
-      const usuario = this.auth.user();
-      if (this.auth.esAlumno() && usuario) {
-        // El alumno solo ve los grupos en los que esta inscrito
-        const completo = await this.api.getUsuario(usuario.id);
-        this.grupos.set(completo.grupos ?? []);
-      } else {
-        this.grupos.set(await this.api.getGrupos());
-      }
+      this.grupos.set(await this.api.getGrupos());
     } catch (e) {
+      this.grupos.set([]);
       this.error.set(this.auth.mensajeError(e));
     } finally {
       this.cargando.set(false);

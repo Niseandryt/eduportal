@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent,
@@ -22,7 +22,7 @@ import { Grupo, Material } from '../models';
     IonTextarea, IonSelect, IonSelectOption,
   ],
 })
-export class MaterialesPage implements OnInit {
+export class MaterialesPage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
 
@@ -47,7 +47,7 @@ export class MaterialesPage implements OnInit {
     addIcons({ addOutline, libraryOutline, openOutline, createOutline });
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.cargar();
   }
 
@@ -62,6 +62,8 @@ export class MaterialesPage implements OnInit {
       this.materiales.set(materiales);
       this.grupos.set(grupos);
     } catch (e) {
+      this.materiales.set([]);
+      this.grupos.set([]);
       this.error.set(this.auth.mensajeError(e));
     } finally {
       this.cargando.set(false);

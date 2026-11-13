@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent,
@@ -24,7 +24,7 @@ import { Entrega, Grupo, Tarea } from '../models';
     IonTextarea, IonSelect, IonSelectOption,
   ],
 })
-export class TareasPage implements OnInit {
+export class TareasPage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
 
@@ -57,7 +57,7 @@ export class TareasPage implements OnInit {
     addIcons({ addOutline, clipboardOutline, createOutline, sendOutline, listOutline });
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.cargar();
   }
 
@@ -73,6 +73,9 @@ export class TareasPage implements OnInit {
         this.misEntregas.set(await this.api.getEntregas({ alumno_id: usuario.alumno.id }));
       }
     } catch (e) {
+      this.tareas.set([]);
+      this.grupos.set([]);
+      this.misEntregas.set([]);
       this.error.set(this.auth.mensajeError(e));
     } finally {
       this.cargando.set(false);

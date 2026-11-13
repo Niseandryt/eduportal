@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
@@ -24,7 +24,7 @@ import { Foro, Respuesta } from '../models';
     IonTextarea, IonInput,
   ],
 })
-export class ForoDetallePage implements OnInit {
+export class ForoDetallePage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
 
@@ -49,16 +49,18 @@ export class ForoDetallePage implements OnInit {
     addIcons({ sendOutline, chatbubbleOutline, createOutline, trashOutline });
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.cargar();
   }
 
   async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set('');
+    this.foro.set(null);
     try {
       this.foro.set(await this.api.getForo(Number(this.id())));
     } catch (e) {
+      this.foro.set(null);
       this.error.set(this.auth.mensajeError(e));
     } finally {
       this.cargando.set(false);

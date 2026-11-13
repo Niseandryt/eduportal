@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import {
@@ -23,7 +23,7 @@ import { Foro, Grupo } from '../models';
     IonInput, IonTextarea, IonSelect, IonSelectOption,
   ],
 })
-export class ForosPage implements OnInit {
+export class ForosPage {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
 
@@ -46,7 +46,7 @@ export class ForosPage implements OnInit {
     addIcons({ addOutline, chatbubblesOutline, createOutline });
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.cargar();
   }
 
@@ -54,17 +54,15 @@ export class ForosPage implements OnInit {
     this.cargando.set(true);
     this.error.set('');
     try {
-      const usuario = this.auth.user();
       const [foros, grupos] = await Promise.all([
         this.api.getForos(),
-        // El alumno solo puede crear foros en sus grupos inscritos
-        this.auth.esAlumno() && usuario
-          ? this.api.getUsuario(usuario.id).then((u) => u.grupos ?? [])
-          : this.api.getGrupos(),
+        this.api.getGrupos(),
       ]);
       this.foros.set(foros);
       this.grupos.set(grupos);
     } catch (e) {
+      this.foros.set([]);
+      this.grupos.set([]);
       this.error.set(this.auth.mensajeError(e));
     } finally {
       this.cargando.set(false);
