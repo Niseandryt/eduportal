@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Inscripcion;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,6 +15,7 @@ class InscripcionController extends Controller
     public function index(Request $request)
     {
         $inscripciones = Inscripcion::with(['grupo', 'user'])
+            ->whereHas('grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('grupo_id'), fn ($q, $grupoId) => $q->where('grupo_id', $grupoId))
             ->when($request->query('user_id'), fn ($q, $userId) => $q->where('user_id', $userId))
             ->latest('created_at')
@@ -26,6 +28,7 @@ class InscripcionController extends Controller
      */
     public function store(Request $request)
     {
+        abort_unless($request->user()->esMaestro(), 403, 'Solo los maestros pueden inscribir usuarios.');
         $datos = $request->validate([
             'grupo_id' => 'required|exists:grupos,id',
             'user_id' => [
@@ -34,6 +37,7 @@ class InscripcionController extends Controller
                 Rule::unique('inscripciones', 'user_id')->where('grupo_id', $request->grupo_id),
             ],
         ]);
+        abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
         $inscripcion = Inscripcion::create($datos);
         return response()->json([
             'mensaje' => 'Inscripcion creada exitosamente',
@@ -44,8 +48,9 @@ class InscripcionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Inscripcion $inscripcion)
+    public function show(Request $request, Inscripcion $inscripcion)
     {
+        abort_unless($inscripcion->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($inscripcion->load(['grupo', 'user']), 200);
     }
 
@@ -54,6 +59,8 @@ class InscripcionController extends Controller
      */
     public function update(Request $request, Inscripcion $inscripcion)
     {
+        abort_unless($request->user()->esMaestro(), 403, 'Solo los maestros pueden actualizar inscripciones.');
+        abort_unless($inscripcion->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $datos = $request->validate([
             'grupo_id' => 'sometimes|required|exists:grupos,id',
             'user_id' => [
@@ -65,6 +72,9 @@ class InscripcionController extends Controller
                     ->ignore($inscripcion->id),
             ],
         ]);
+        if (isset($datos['grupo_id'])) {
+            abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
+        }
         $inscripcion->update($datos);
         return response()->json([
             'mensaje' => 'Inscripcion actualizada exitosamente',
@@ -75,8 +85,10 @@ class InscripcionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Inscripcion $inscripcion)
+    public function destroy(Request $request, Inscripcion $inscripcion)
     {
+        abort_unless($request->user()->esMaestro(), 403, 'Solo los maestros pueden eliminar inscripciones.');
+        abort_unless($inscripcion->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $inscripcion->delete();
         return response()->json([
             'mensaje' => 'Inscripcion eliminada exitosamente',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Respuesta;
+use App\Models\Foro;
 use Illuminate\Http\Request;
 
 class RespuestaController extends Controller
@@ -13,6 +14,7 @@ class RespuestaController extends Controller
     public function index(Request $request)
     {
         $respuestas = Respuesta::with(['foro', 'user'])
+            ->whereHas('foro.grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('foro_id'), fn ($q, $foroId) => $q->where('foro_id', $foroId))
             ->latest('created_at')
             ->get();
@@ -28,6 +30,8 @@ class RespuestaController extends Controller
             'foro_id' => 'required|exists:foros,id',
             'contenido' => 'required|string',
         ]);
+        $foro = Foro::findOrFail($datos['foro_id']);
+        abort_unless($foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $respuesta = Respuesta::create([...$datos, 'user_id' => $request->user()->id]);
         return response()->json([
             'mensaje' => 'Respuesta creada exitosamente',
@@ -38,8 +42,9 @@ class RespuestaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Respuesta $respuesta)
+    public function show(Request $request, Respuesta $respuesta)
     {
+        abort_unless($respuesta->foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($respuesta->load(['foro', 'user']), 200);
     }
 
@@ -48,6 +53,7 @@ class RespuestaController extends Controller
      */
     public function update(Request $request, Respuesta $respuesta)
     {
+        abort_unless($respuesta->foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         if ($respuesta->user_id !== $request->user()->id) {
             return response()->json(['mensaje' => 'Solo el autor puede editar esta respuesta'], 403);
         }
@@ -66,6 +72,7 @@ class RespuestaController extends Controller
      */
     public function destroy(Request $request, Respuesta $respuesta)
     {
+        abort_unless($respuesta->foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         if ($respuesta->user_id !== $request->user()->id) {
             return response()->json(['mensaje' => 'Solo el autor puede eliminar esta respuesta'], 403);
         }

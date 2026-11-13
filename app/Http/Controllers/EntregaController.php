@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Entrega;
+use App\Models\Tarea;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,6 +15,7 @@ class EntregaController extends Controller
     public function index(Request $request)
     {
         $entregas = Entrega::with(['tarea', 'alumno.user'])
+            ->whereHas('tarea.grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('tarea_id'), fn ($q, $tareaId) => $q->where('tarea_id', $tareaId))
             ->when($request->query('alumno_id'), fn ($q, $alumnoId) => $q->where('alumno_id', $alumnoId))
             ->latest('created_at')
@@ -38,6 +40,8 @@ class EntregaController extends Controller
             ],
             'contenido' => 'required|string',
         ]);
+        $tarea = Tarea::findOrFail($datos['tarea_id']);
+        abort_unless($tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $entrega = Entrega::create([...$datos, 'alumno_id' => $alumnoId]);
         return response()->json([
             'mensaje' => 'Entrega creada exitosamente',
@@ -48,8 +52,9 @@ class EntregaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Entrega $entrega)
+    public function show(Request $request, Entrega $entrega)
     {
+        abort_unless($entrega->tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($entrega->load(['tarea', 'alumno.user']), 200);
     }
 
@@ -58,6 +63,7 @@ class EntregaController extends Controller
      */
     public function update(Request $request, Entrega $entrega)
     {
+        abort_unless($entrega->tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $datos = $request->validate([
             'contenido' => 'sometimes|required|string',
             'calificacion' => 'sometimes|nullable|numeric|min:0|max:10',
@@ -75,8 +81,9 @@ class EntregaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Entrega $entrega)
+    public function destroy(Request $request, Entrega $entrega)
     {
+        abort_unless($entrega->tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $entrega->delete();
         return response()->json([
             'mensaje' => 'Entrega eliminada exitosamente',

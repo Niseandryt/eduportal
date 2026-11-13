@@ -42,8 +42,9 @@ class GrupoTest extends TestCase
 
     public function test_index_lista_grupos_con_maestro(): void
     {
-        Grupo::factory()->count(2)->create();
-        Sanctum::actingAs(User::factory()->create());
+        $maestro = Maestro::factory()->create();
+        Grupo::factory()->count(2)->create(['maestro_id' => $maestro->id]);
+        Sanctum::actingAs($maestro->user);
 
         $this->getJson('/api/grupos')
             ->assertOk()
@@ -54,7 +55,7 @@ class GrupoTest extends TestCase
     public function test_show_incluye_relaciones(): void
     {
         $grupo = Grupo::factory()->create();
-        Sanctum::actingAs(User::factory()->create());
+        Sanctum::actingAs($grupo->maestro->user);
 
         $this->getJson("/api/grupos/{$grupo->id}")
             ->assertOk()
@@ -64,7 +65,7 @@ class GrupoTest extends TestCase
     public function test_maestro_puede_actualizar_y_eliminar_grupo(): void
     {
         $grupo = Grupo::factory()->create();
-        Sanctum::actingAs(Maestro::factory()->create()->user);
+        Sanctum::actingAs($grupo->maestro->user);
 
         $this->putJson("/api/grupos/{$grupo->id}", ['nombre' => 'Nuevo nombre'])
             ->assertOk()

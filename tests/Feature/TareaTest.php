@@ -67,7 +67,7 @@ class TareaTest extends TestCase
     {
         $grupo = Grupo::factory()->create();
         $tarea = Tarea::create(['grupo_id' => $grupo->id, 'maestro_id' => $grupo->maestro_id, 'titulo' => 'A']);
-        Sanctum::actingAs(Maestro::factory()->create()->user);
+        Sanctum::actingAs($grupo->maestro->user);
 
         $this->deleteJson("/api/tareas/{$tarea->id}")->assertOk();
         $this->assertDatabaseMissing('tareas', ['id' => $tarea->id]);

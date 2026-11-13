@@ -43,7 +43,7 @@ class InscripcionTest extends TestCase
 
     public function test_rechaza_grupo_o_usuario_inexistente(): void
     {
-        Sanctum::actingAs(Alumno::factory()->create()->user);
+        Sanctum::actingAs(Grupo::factory()->create()->maestro->user);
 
         $this->postJson('/api/inscripciones', [
             'grupo_id' => 999,

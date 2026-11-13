@@ -10,9 +10,9 @@ class GrupoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Grupo::with('maestro.user')->latest('created_at')->get(), 200);
+        return response()->json(Grupo::visiblePara($request->user())->with('maestro.user')->latest('created_at')->get(), 200);
     }
 
 
@@ -38,8 +38,9 @@ class GrupoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Grupo $grupo)
+    public function show(Request $request, Grupo $grupo)
     {
+        abort_unless($grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json(
             $grupo->load(['maestro.user', 'users', 'tareas', 'materiales', 'foros']),
             200
@@ -55,6 +56,7 @@ class GrupoController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden actualizar grupos'], 403);
         }
+        abort_unless($grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $datos = $request->validate([
             'nombre' => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -74,6 +76,7 @@ class GrupoController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden eliminar grupos'], 403);
         }
+        abort_unless($grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $grupo->delete();
         return response()->json([
             'mensaje' => 'Grupo eliminado exitosamente',

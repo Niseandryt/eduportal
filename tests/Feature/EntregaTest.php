@@ -29,6 +29,7 @@ class EntregaTest extends TestCase
     {
         $tarea = $this->tareaLista();
         $alumno = Alumno::factory()->create();
+        $tarea->grupo->users()->attach($alumno->user_id);
         Sanctum::actingAs($alumno->user);
 
         $response = $this->postJson('/api/entregas', [
@@ -72,7 +73,7 @@ class EntregaTest extends TestCase
             'alumno_id' => Alumno::factory()->create()->id,
             'contenido' => 'X',
         ]);
-        Sanctum::actingAs(Maestro::factory()->create()->user);
+        Sanctum::actingAs($tarea->grupo->maestro->user);
 
         $this->putJson("/api/entregas/{$entrega->id}", ['calificacion' => 9.5])
             ->assertOk()
@@ -97,7 +98,7 @@ class EntregaTest extends TestCase
             'alumno_id' => Alumno::factory()->create()->id,
             'contenido' => 'X',
         ]);
-        Sanctum::actingAs(Maestro::factory()->create()->user);
+        Sanctum::actingAs($tarea->grupo->maestro->user);
 
         $this->putJson("/api/entregas/{$entrega->id}", ['calificacion' => 15])->assertUnprocessable();
     }

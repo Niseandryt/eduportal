@@ -32,7 +32,7 @@ class UserController extends Controller
         $datos = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'email' => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => 'sometimes|required|string|min:8|confirmed',
+            'password' => 'sometimes|required|string|min:8',
         ]);
         $user->update($datos);
         return response()->json([

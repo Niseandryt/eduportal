@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Foro;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 
 class ForoController extends Controller
@@ -13,6 +14,7 @@ class ForoController extends Controller
     public function index(Request $request)
     {
         $foros = Foro::with(['grupo', 'user'])
+            ->whereHas('grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('grupo_id'), fn ($q, $grupoId) => $q->where('grupo_id', $grupoId))
             ->latest('created_at')
             ->get();
@@ -29,6 +31,7 @@ class ForoController extends Controller
             'titulo' => 'required|string|max:255',
             'contenido' => 'required|string',
         ]);
+        abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
         $foro = Foro::create([...$datos, 'user_id' => $request->user()->id]);
         return response()->json([
             'mensaje' => 'Foro creado exitosamente',
@@ -39,8 +42,9 @@ class ForoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Foro $foro)
+    public function show(Request $request, Foro $foro)
     {
+        abort_unless($foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($foro->load(['grupo', 'user', 'respuestas.user']), 200);
     }
 
@@ -49,6 +53,7 @@ class ForoController extends Controller
      */
     public function update(Request $request, Foro $foro)
     {
+        abort_unless($foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         if ($foro->user_id !== $request->user()->id) {
             return response()->json(['mensaje' => 'Solo el autor puede editar este foro'], 403);
         }
@@ -68,6 +73,7 @@ class ForoController extends Controller
      */
     public function destroy(Request $request, Foro $foro)
     {
+        abort_unless($foro->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         if ($foro->user_id !== $request->user()->id) {
             return response()->json(['mensaje' => 'Solo el autor puede eliminar este foro'], 403);
         }

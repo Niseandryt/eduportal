@@ -82,6 +82,10 @@ Publicos:
 
 Con `Authorization: Bearer <token>`:
 
+Los grupos y su contenido solo son visibles para usuarios inscritos y para el
+maestro asignado al grupo. Las inscripciones solo pueden ser administradas por
+maestros que pertenecen al grupo; al quitar una inscripcion se pierde el acceso.
+
 - `POST /api/logout`
 - `apiResource users` (sin `store`; el registro es publico)
 - `apiResource grupos` — crear/editar/eliminar solo maestros

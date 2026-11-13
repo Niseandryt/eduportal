@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Material;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 
 class MaterialController extends Controller
@@ -13,6 +14,7 @@ class MaterialController extends Controller
     public function index(Request $request)
     {
         $materiales = Material::with(['grupo', 'maestro.user'])
+            ->whereHas('grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('grupo_id'), fn ($q, $grupoId) => $q->where('grupo_id', $grupoId))
             ->latest('created_at')
             ->get();
@@ -33,6 +35,7 @@ class MaterialController extends Controller
             'descripcion' => 'nullable|string',
             'enlace' => 'nullable|url|max:255',
         ]);
+        abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
         $material = Material::create([...$datos, 'maestro_id' => $request->user()->maestro->id]);
         return response()->json([
             'mensaje' => 'Material creado exitosamente',
@@ -43,8 +46,9 @@ class MaterialController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Material $material)
+    public function show(Request $request, Material $material)
     {
+        abort_unless($material->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($material->load(['grupo', 'maestro.user']), 200);
     }
 
@@ -56,12 +60,16 @@ class MaterialController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden actualizar materiales'], 403);
         }
+        abort_unless($material->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $datos = $request->validate([
             'grupo_id' => 'sometimes|required|exists:grupos,id',
             'titulo' => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
             'enlace' => 'nullable|url|max:255',
         ]);
+        if (isset($datos['grupo_id'])) {
+            abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
+        }
         $material->update($datos);
         return response()->json([
             'mensaje' => 'Material actualizado exitosamente',
@@ -77,6 +85,7 @@ class MaterialController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden eliminar materiales'], 403);
         }
+        abort_unless($material->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $material->delete();
         return response()->json([
             'mensaje' => 'Material eliminado exitosamente',

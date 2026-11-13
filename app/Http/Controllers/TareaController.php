@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tarea;
+use App\Models\Grupo;
 use Illuminate\Http\Request;
 
 class TareaController extends Controller
@@ -13,6 +14,7 @@ class TareaController extends Controller
     public function index(Request $request)
     {
         $tareas = Tarea::with(['grupo', 'maestro.user'])
+            ->whereHas('grupo', fn ($query) => $query->visiblePara($request->user()))
             ->when($request->query('grupo_id'), fn ($q, $grupoId) => $q->where('grupo_id', $grupoId))
             ->latest('created_at')
             ->get();
@@ -33,6 +35,7 @@ class TareaController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_entrega' => 'nullable|date',
         ]);
+        abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
         $tarea = Tarea::create([...$datos, 'maestro_id' => $request->user()->maestro->id]);
         return response()->json([
             'mensaje' => 'Tarea creada exitosamente',
@@ -43,8 +46,9 @@ class TareaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Tarea $tarea)
+    public function show(Request $request, Tarea $tarea)
     {
+        abort_unless($tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         return response()->json($tarea->load(['grupo', 'maestro.user', 'entregas.alumno.user']), 200);
     }
 
@@ -56,12 +60,16 @@ class TareaController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden actualizar tareas'], 403);
         }
+        abort_unless($tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $datos = $request->validate([
             'grupo_id' => 'sometimes|required|exists:grupos,id',
             'titulo' => 'sometimes|required|string|max:255',
             'descripcion' => 'nullable|string',
             'fecha_entrega' => 'nullable|date',
         ]);
+        if (isset($datos['grupo_id'])) {
+            abort_unless(Grupo::visiblePara($request->user())->whereKey($datos['grupo_id'])->exists(), 403, 'No perteneces a este grupo.');
+        }
         $tarea->update($datos);
         return response()->json([
             'mensaje' => 'Tarea actualizada exitosamente',
@@ -77,6 +85,7 @@ class TareaController extends Controller
         if (!$request->user()->esMaestro()) {
             return response()->json(['mensaje' => 'Solo los maestros pueden eliminar tareas'], 403);
         }
+        abort_unless($tarea->grupo->perteneceUsuario($request->user()), 403, 'No perteneces a este grupo.');
         $tarea->delete();
         return response()->json([
             'mensaje' => 'Tarea eliminada exitosamente',

@@ -18,6 +18,7 @@ class ForoRespuestaTest extends TestCase
     {
         $grupo = Grupo::factory()->create();
         $alumno = Alumno::factory()->create();
+        $grupo->users()->attach($alumno->user_id);
         Sanctum::actingAs($alumno->user);
 
         $response = $this->postJson('/api/foros', [
@@ -50,6 +51,7 @@ class ForoRespuestaTest extends TestCase
             'user_id' => $foro->user_id,
             'contenido' => 'Respuesta 1',
         ]);
+        $foro->grupo->users()->attach($foro->user_id);
         Sanctum::actingAs($foro->user);
 
         $this->getJson("/api/foros/{$foro->id}")
@@ -66,6 +68,7 @@ class ForoRespuestaTest extends TestCase
             'contenido' => 'Contenido',
         ]);
         $otro = Alumno::factory()->create();
+        $foro->grupo->users()->attach($otro->user_id);
         Sanctum::actingAs($otro->user);
 
         $response = $this->postJson('/api/respuestas', [
@@ -96,9 +99,12 @@ class ForoRespuestaTest extends TestCase
             'titulo' => 'Original',
             'contenido' => 'Contenido',
         ]);
+        $foro->grupo->users()->attach($autor->user_id);
 
         // Otro usuario no puede
-        Sanctum::actingAs(Alumno::factory()->create()->user);
+        $otro = Alumno::factory()->create();
+        $foro->grupo->users()->attach($otro->user_id);
+        Sanctum::actingAs($otro->user);
         $this->putJson("/api/foros/{$foro->id}", ['titulo' => 'Modificado'])->assertForbidden();
         $this->deleteJson("/api/foros/{$foro->id}")->assertForbidden();
 
@@ -125,9 +131,12 @@ class ForoRespuestaTest extends TestCase
             'user_id' => $autor->user_id,
             'contenido' => 'Original',
         ]);
+        $foro->grupo->users()->attach($autor->user_id);
 
         // Otro usuario no puede
-        Sanctum::actingAs(Alumno::factory()->create()->user);
+        $otro = Alumno::factory()->create();
+        $foro->grupo->users()->attach($otro->user_id);
+        Sanctum::actingAs($otro->user);
         $this->putJson("/api/respuestas/{$respuesta->id}", ['contenido' => 'Modificado'])->assertForbidden();
         $this->deleteJson("/api/respuestas/{$respuesta->id}")->assertForbidden();
 
